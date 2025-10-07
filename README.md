@@ -2,26 +2,19 @@
 
 A friendly command‑line tool that evaluates the open‑source health of GitHub repositories using your GitHub token. It follows the 2025 Project Maturity Tiers (Section 2) guidance and can export a nicely formatted PDF report.
 
-## Quick start (run locally)
+## Quick start (Node/npm)
 
-1) Install Python 3.10+ and Git.
+1) Install Node.js 18+ and Git.
 
 2) Clone this repo and open a terminal in the project directory.
 
-3) (Recommended) Create and activate a virtual environment:
+3) Install dependencies:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+npm install
 ```
 
-4) Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-5) Provide a GitHub token with repo read access. Pick one:
+4) Provide a GitHub token with repo read access. Either:
 
 - Export once per shell session:
 
@@ -29,52 +22,42 @@ pip install -r requirements.txt
 export GITHUB_TOKEN=ghp_yourTokenHere
 ```
 
-- Or pass `--token` on the command line (examples below).
+- Or set it inline per command.
 
 ## How to run
 
-You can run the tool either via the package entry point or directly via the CLI module. Both accept the same flags.
+This repo includes an npm-powered CLI using `@figify/gh-metrics` for GitHub repository metrics.
 
-- Package entry point:
-
-```bash
-python3 -m oss_health --repos owner1/repo1 owner2/repo2 --format table
-```
-
-- CLI module explicitly:
+- Using npx:
 
 ```bash
-python3 -m oss_health.cli --org some-org --limit 10 --format json --details
+npx @figify/gh-metrics --a <owner-or-org> --r <repo>
 ```
 
-## Generate a PDF report
-
-Add the `--pdf PATH` flag to save a formatted PDF summary. Include `--details` to append per‑repository breakdown pages.
+- Using the npm script in this repo:
 
 ```bash
-# Example: assess two repos, show table in terminal, and write a PDF
-python3 -m oss_health --repos owner1/repo1 owner2/repo2 \
-  --format table \
-  --pdf reports/oss-health.pdf \
-  --title "Acme OSS Health Report" \
-  --token "$GITHUB_TOKEN"
-
-# Example: scan an org, detailed JSON to terminal, and detailed PDF
-python3 -m oss_health --org some-org --limit 20 \
-  --format json --details \
-  --pdf oss-health-detailed.pdf \
-  --token "$GITHUB_TOKEN"
+npm run gh-metrics -- --a <owner-or-org> --r <repo>
 ```
 
-What the PDF includes:
+### Examples
 
-- A summary table of all repositories with Documentation, Infrastructure, Health, Total, Health Label, and Maturity columns.
-- Optional detail pages per repository (when `--details` is used) with the breakdowns and key signals.
+```bash
+# npx example
+GITHUB_TOKEN="$GITHUB_TOKEN" npx @figify/gh-metrics --a sindresorhus --r ora
 
-## Output formats
+# npm script example
+GITHUB_TOKEN="$GITHUB_TOKEN" npm run gh-metrics -- --a sindresorhus --r ora
+```
 
-- `table`: fixed‑width table printed to your terminal.
-- `json`: machine‑readable results; `--details` adds breakdown arrays and hints.
+## Notes
+
+- `@figify/gh-metrics` reports PR and issue engagement metrics for a single repository at a time.
+- The original Python CLI for OSS Health scoring remains in `oss_health/` if you prefer that workflow.
+
+## Output
+
+`@figify/gh-metrics` prints metrics (e.g., average time to close, comments per issue/PR, reviews per PR) to stdout.
 
 ## Scoring overview (Policy Section 2)
 
@@ -86,6 +69,6 @@ Totals map to tiers: <10 Incubation, 10–24 Growth, ≥24 Mature. Health: 10–
 
 ## Tips and troubleshooting
 
-- If you see `ModuleNotFoundError: requests`, make sure you ran `pip install -r requirements.txt` in your active virtual environment.
-- If you hit API rate limits, try again later or reduce the number of repositories with `--limit`.
-- Private repositories are not scanned when using `--org`.
+- Ensure `GITHUB_TOKEN` has `repo` scope and is exported.
+- For GitHub Enterprise, set `GITHUB_URL` (e.g., `https://<ghe-host>/api`).
+- If you hit API rate limits, try again later.
