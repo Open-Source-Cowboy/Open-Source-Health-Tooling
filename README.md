@@ -48,11 +48,16 @@ GITHUB_TOKEN="$GITHUB_TOKEN" npx @figify/gh-metrics --a sindresorhus --r ora
 
 # npm script example
 GITHUB_TOKEN="$GITHUB_TOKEN" npm run gh-metrics -- --a sindresorhus --r ora
+
+# Node Section 2 scoring CLI (this repo)
+GITHUB_TOKEN="$GITHUB_TOKEN" npm run oss-health -- --repos owner1/repo1 owner2/repo2 --format json --details
+GITHUB_TOKEN="$GITHUB_TOKEN" npm run oss-health -- --org some-org --limit 10 --format table
 ```
 
 ## Notes
 
 - `@figify/gh-metrics` reports PR and issue engagement metrics for a single repository at a time.
+- The new Node CLI (`npm run oss-health`) enforces the Section 2 requirements defined below, mirroring the Python implementation.
 - The original Python CLI for OSS Health scoring remains in `oss_health/` if you prefer that workflow.
 
 ## Output
