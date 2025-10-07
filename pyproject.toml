@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oss-health-checker"
+version = "0.1.0"
+description = "CLI to evaluate OSS health of GitHub repos per policy Section 2"
+authors = [{name = "Open Source Office"}]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "requests>=2.32.3",
+  "reportlab>=4.2.0",
+]
+
+[project.scripts]
+oss-health = "oss_health.cli:main"

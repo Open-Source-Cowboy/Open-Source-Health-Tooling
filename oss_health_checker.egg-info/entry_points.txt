@@ -1,0 +1,2 @@
+[console_scripts]
+oss-health = oss_health.cli:main

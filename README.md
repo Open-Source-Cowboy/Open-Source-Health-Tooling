@@ -2,45 +2,71 @@
 
 A Python CLI to evaluate the open source health of GitHub repositories using a token, aligned with Section 2 of the Open Source Committee: Project Maturity Tiers (2025) methodology.
 
-## Install
+## Beginner-friendly install (Windows, macOS, Linux)
 
+1) Install Python 3.10+:
+- Windows: Download from the Microsoft Store or python.org. During install, check "Add python.exe to PATH".
+- macOS: Use Homebrew (`brew install python`) or python.org installer.
+- Linux: Use your package manager (e.g., `sudo apt install python3 python3-pip`).
+
+2) Open a terminal/command prompt:
+- Windows: Start Menu -> "Command Prompt" or "PowerShell".
+- macOS: Launchpad -> "Terminal".
+- Linux: Open your terminal app.
+
+3) Clone or download this folder to your computer, then in the terminal, change into the project directory.
+
+4) (Recommended) Create and activate a virtual environment:
 ```bash
 python -m venv .venv
+# Windows
+.\.venv\Scripts\activate
+# macOS/Linux
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
-## Usage
-
-Set `GITHUB_TOKEN` or pass `--token`.
-
-- Check specific repositories:
-
+5) Install the tool and dependencies:
 ```bash
-python -m oss_health.cli --repos owner1/repo1 owner2/repo2 --format table
+pip install -e .
 ```
-
-- Scan an organization’s public repositories (limit to first N if desired):
-
+If you get a permissions warning, try:
 ```bash
-python -m oss_health.cli --org IntersectMBO --limit 10 --format json --details
+pip install --user -e .
 ```
 
-### Output
+6) Set your GitHub token:
+- Create a token at GitHub (Settings -> Developer settings -> Fine-grained or classic token). Read-only public repo scope is sufficient.
+- In the terminal, set the environment variable:
+```bash
+# Windows PowerShell
+$env:GITHUB_TOKEN = "ghp_your_token_here"
+# Windows cmd.exe
+set GITHUB_TOKEN=ghp_your_token_here
+# macOS/Linux (bash/zsh)
+export GITHUB_TOKEN=ghp_your_token_here
+```
 
-- `table`: fixed-width table with per-dimension and total scores, health label, and maturity tier.
-- `json`: array of objects with scores; `--details` adds breakdown and file hints.
+## Run from command prompt
 
-### Scoring summary (per policy Section 2)
+- Check specific repositories and print a table:
+```bash
+oss-health --repos owner1/repo1 owner2/repo2 --format table
+```
 
-- Documentation (0–7): README, LICENSE, CONTRIBUTING, SECURITY, Code of Conduct, Issue/PR templates, Setup instructions.
-- Technical Infrastructure (0–18): tests, CI/CD, security scanning, dependency updates, linting/formatting, release management, build/packaging, IaC, platform integration.
-- Health & Sustainability (0–12): community engagement, governance & leadership, succession planning, ecosystem importance, activity trend, sustainability & risks.
+- Scan an organization (public repos) and save a PDF report:
+```bash
+oss-health --org IntersectMBO --limit 10 --format pdf --output report.pdf
+```
 
-Totals map to tiers: <10 Incubation, 10–24 Growth, ≥24 Mature. Health: 10–12 Healthy, 6–9 Moderate, 0–5 Unhealthy.
+- Output JSON with details:
+```bash
+oss-health --repos owner/repo --format json --details
+```
 
-### Notes
+## PDF output
+- Use `--format pdf --output report.pdf` to generate a PDF summary table with repository scores, health label, and maturity tier.
+- The PDF uses standard US Letter size; open the resulting `report.pdf` with any PDF viewer.
 
-- Uses GitHub REST API v3. Heuristics scan the default branch tree and workflows; signals are best-effort and conservative.
-- Rate limits: the tool paginates and may back off on 403 Retry-After headers.
-- Private repos are not scanned when using `--org`.
+## Notes
+- If `oss-health` isn't found on Windows, try `python -m oss_health.cli ...` from the project folder, or ensure your Python Scripts directory is on PATH.
+- The tool uses conservative heuristics from the default branch and GitHub workflows. It may not capture private configurations or non-standard layouts.

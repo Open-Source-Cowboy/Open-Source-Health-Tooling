@@ -4,10 +4,14 @@ import argparse
 import json
 import os
 import sys
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
 from .github_client import GitHubClient
 from .scoring import RepositoryAssessment, assess_repository
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
 
 def parse_args(argv: List[str]) -> argparse.Namespace:
@@ -38,9 +42,13 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--format",
-        choices=["json", "table"],
+        choices=["json", "table", "pdf"],
         default="table",
         help="Output format",
+    )
+    parser.add_argument(
+        "--output",
+        help="Output file path for --format pdf (e.g., report.pdf)",
     )
     parser.add_argument(
         "--details",
@@ -121,7 +129,9 @@ def _serialize(result: RepositoryAssessment, details: bool) -> Dict[str, Any]:
     }
 
 
-def main(argv: List[str]) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
+    if argv is None:
+        argv = sys.argv[1:]
     args = parse_args(argv)
     client = GitHubClient(args.token)
 
@@ -150,11 +160,76 @@ def main(argv: List[str]) -> int:
     if args.format == "json":
         payload = [_serialize(r, args.details) for r in results]
         print(json.dumps(payload, indent=2))
-    else:
+    elif args.format == "table":
         print(_format_table(results))
+    else:
+        # PDF
+        if not args.output:
+            print("--output is required when --format pdf", file=sys.stderr)
+            return 2
+        _write_pdf(args.output, results)
 
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    raise SystemExit(main())
+
+
+def _write_pdf(path: str, results: List[RepositoryAssessment]) -> None:
+    doc = SimpleDocTemplate(path, pagesize=LETTER)
+    styles = getSampleStyleSheet()
+    story = []
+
+    title = Paragraph("Open Source Health Report", styles["Title"])
+    story.append(title)
+    story.append(Spacer(1, 12))
+
+    # Optional subtitle
+    subtitle = Paragraph(
+        "Scored per Section 2 of Project Maturity Tiers (2025)", styles["Normal"]
+    )
+    story.append(subtitle)
+    story.append(Spacer(1, 12))
+
+    data = [
+        [
+            "Repository",
+            "Docs",
+            "Infra",
+            "Health",
+            "Total",
+            "Health Label",
+            "Maturity",
+        ]
+    ]
+
+    for r in results:
+        data.append(
+            [
+                f"{r.owner}/{r.repo}",
+                f"{r.documentation_score.points}/{r.documentation_score.max_points}",
+                f"{r.total_infrastructure_points}/{r.max_infrastructure_points}",
+                f"{r.total_health_points}/{r.max_health_points}",
+                f"{r.total_points:.1f}",
+                r.health_label,
+                r.maturity_tier,
+            ]
+        )
+
+    table = Table(data, hAlign="LEFT")
+    table_style = TableStyle(
+        [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+            ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+            ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+        ]
+    )
+    table.setStyle(table_style)
+    story.append(table)
+
+    doc.build(story)
