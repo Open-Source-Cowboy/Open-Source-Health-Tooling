@@ -1,0 +1,46 @@
+# OSS Health Checker
+
+A Python CLI to evaluate the open source health of GitHub repositories using a token, aligned with Section 2 of the Open Source Committee: Project Maturity Tiers (2025) methodology.
+
+## Install
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Usage
+
+Set `GITHUB_TOKEN` or pass `--token`.
+
+- Check specific repositories:
+
+```bash
+python -m oss_health.cli --repos owner1/repo1 owner2/repo2 --format table
+```
+
+- Scan an organization’s public repositories (limit to first N if desired):
+
+```bash
+python -m oss_health.cli --org IntersectMBO --limit 10 --format json --details
+```
+
+### Output
+
+- `table`: fixed-width table with per-dimension and total scores, health label, and maturity tier.
+- `json`: array of objects with scores; `--details` adds breakdown and file hints.
+
+### Scoring summary (per policy Section 2)
+
+- Documentation (0–7): README, LICENSE, CONTRIBUTING, SECURITY, Code of Conduct, Issue/PR templates, Setup instructions.
+- Technical Infrastructure (0–18): tests, CI/CD, security scanning, dependency updates, linting/formatting, release management, build/packaging, IaC, platform integration.
+- Health & Sustainability (0–12): community engagement, governance & leadership, succession planning, ecosystem importance, activity trend, sustainability & risks.
+
+Totals map to tiers: <10 Incubation, 10–24 Growth, ≥24 Mature. Health: 10–12 Healthy, 6–9 Moderate, 0–5 Unhealthy.
+
+### Notes
+
+- Uses GitHub REST API v3. Heuristics scan the default branch tree and workflows; signals are best-effort and conservative.
+- Rate limits: the tool paginates and may back off on 403 Retry-After headers.
+- Private repos are not scanned when using `--org`.
