@@ -1,37 +1,82 @@
 # OSS Health Checker
 
-A Python CLI to evaluate the open source health of GitHub repositories using a token, aligned with Section 2 of the Open Source Committee: Project Maturity Tiers (2025) methodology.
+A friendly command‑line tool that evaluates the open‑source health of GitHub repositories using your GitHub token. It follows the 2025 Project Maturity Tiers (Section 2) guidance and can export a nicely formatted PDF report.
 
-## Install
+## Quick start (run locally)
+
+1) Install Python 3.10+ and Git.
+
+2) Clone this repo and open a terminal in the project directory.
+
+3) (Recommended) Create and activate a virtual environment:
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
+```
+
+4) Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+5) Provide a GitHub token with repo read access. Pick one:
 
-Set `GITHUB_TOKEN` or pass `--token`.
-
-- Check specific repositories:
+- Export once per shell session:
 
 ```bash
-python -m oss_health.cli --repos owner1/repo1 owner2/repo2 --format table
+export GITHUB_TOKEN=ghp_yourTokenHere
 ```
 
-- Scan an organization’s public repositories (limit to first N if desired):
+- Or pass `--token` on the command line (examples below).
+
+## How to run
+
+You can run the tool either via the package entry point or directly via the CLI module. Both accept the same flags.
+
+- Package entry point:
 
 ```bash
-python -m oss_health.cli --org IntersectMBO --limit 10 --format json --details
+python3 -m oss_health --repos owner1/repo1 owner2/repo2 --format table
 ```
 
-### Output
+- CLI module explicitly:
 
-- `table`: fixed-width table with per-dimension and total scores, health label, and maturity tier.
-- `json`: array of objects with scores; `--details` adds breakdown and file hints.
+```bash
+python3 -m oss_health.cli --org some-org --limit 10 --format json --details
+```
 
-### Scoring summary (per policy Section 2)
+## Generate a PDF report
+
+Add the `--pdf PATH` flag to save a formatted PDF summary. Include `--details` to append per‑repository breakdown pages.
+
+```bash
+# Example: assess two repos, show table in terminal, and write a PDF
+python3 -m oss_health --repos owner1/repo1 owner2/repo2 \
+  --format table \
+  --pdf reports/oss-health.pdf \
+  --title "Acme OSS Health Report" \
+  --token "$GITHUB_TOKEN"
+
+# Example: scan an org, detailed JSON to terminal, and detailed PDF
+python3 -m oss_health --org some-org --limit 20 \
+  --format json --details \
+  --pdf oss-health-detailed.pdf \
+  --token "$GITHUB_TOKEN"
+```
+
+What the PDF includes:
+
+- A summary table of all repositories with Documentation, Infrastructure, Health, Total, Health Label, and Maturity columns.
+- Optional detail pages per repository (when `--details` is used) with the breakdowns and key signals.
+
+## Output formats
+
+- `table`: fixed‑width table printed to your terminal.
+- `json`: machine‑readable results; `--details` adds breakdown arrays and hints.
+
+## Scoring overview (Policy Section 2)
 
 - Documentation (0–7): README, LICENSE, CONTRIBUTING, SECURITY, Code of Conduct, Issue/PR templates, Setup instructions.
 - Technical Infrastructure (0–18): tests, CI/CD, security scanning, dependency updates, linting/formatting, release management, build/packaging, IaC, platform integration.
@@ -39,8 +84,8 @@ python -m oss_health.cli --org IntersectMBO --limit 10 --format json --details
 
 Totals map to tiers: <10 Incubation, 10–24 Growth, ≥24 Mature. Health: 10–12 Healthy, 6–9 Moderate, 0–5 Unhealthy.
 
-### Notes
+## Tips and troubleshooting
 
-- Uses GitHub REST API v3. Heuristics scan the default branch tree and workflows; signals are best-effort and conservative.
-- Rate limits: the tool paginates and may back off on 403 Retry-After headers.
-- Private repos are not scanned when using `--org`.
+- If you see `ModuleNotFoundError: requests`, make sure you ran `pip install -r requirements.txt` in your active virtual environment.
+- If you hit API rate limits, try again later or reduce the number of repositories with `--limit`.
+- Private repositories are not scanned when using `--org`.
