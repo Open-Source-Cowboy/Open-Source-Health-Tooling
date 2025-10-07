@@ -1,0 +1,25 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "A friendly command‑line tool that evaluates the open‑source health of GitHub repositories using your GitHub token. It follows the 2025 Project Maturity Tiers (Section 2) guidance and can export a nicely formatted PDF report.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gh-metrics": "gh-metrics",
+    "oss-health": "node ./src/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Open-Source-Cowboy/Open-Source-Health-Tooling.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Open-Source-Cowboy/Open-Source-Health-Tooling/issues"
+  },
+  "homepage": "https://github.com/Open-Source-Cowboy/Open-Source-Health-Tooling#readme",
+  "devDependencies": {
+    "@figify/gh-metrics": "^0.4.0"
+  }
+}
